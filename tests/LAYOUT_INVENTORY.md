@@ -118,7 +118,7 @@ Read-only checks, run from the repo root on this branch. Note the real API is
 
 ```bash
 # Compute the area_cli set and confirm test_backup_cli_security.py is
-# area_security. Expected: 27 files, then "security".
+# area_security. Expected: 28 files, then "security".
 .venv/bin/python - <<'PY'
 from pathlib import Path
 from tests._taxonomy import classify_test_path
@@ -162,7 +162,7 @@ Run with the project venv (`.venv/bin/python`); system `python3` may miss
 pinned deps. Before the move, record the baseline; after, compare:
 
 ```bash
-# Selection must match the 27 files before and after the move.
+# Selection must match the 28 files before and after the move.
 .venv/bin/python tests/run_focus.py --dry-run --area cli
 .venv/bin/python -m pytest -m area_cli -q
 
