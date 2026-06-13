@@ -20,6 +20,8 @@ jobs:
         environment-variables: |
           APP_PORT=7000
           APP_BIND=0.0.0.0
+          PUID=1000
+          PGID=1000
           NODE_ENV=production
           AUTH_ENABLED=true
           ODYSSEUS_ADMIN_USER=admin
