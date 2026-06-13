@@ -17,3 +17,14 @@ jobs:
         virtual-machine: ${{ vars.HOSTINGER_VM_ID }}
         project-name: 'odysseus'
         docker-compose-path: ./docker-compose.yml
+        environment-variables: |
+          APP_PORT=7000
+          APP_BIND=0.0.0.0
+          NODE_ENV=production
+          AUTH_ENABLED=true
+          ODYSSEUS_ADMIN_USER=admin
+          ODYSSEUS_ADMIN_PASSWORD=${{ secrets.ODYSSEUS_ADMIN_PASSWORD }}
+          DATABASE_URL=sqlite:///./data/app.db
+          SEARXNG_SECRET=${{ secrets.SEARXNG_SECRET }}
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          HF_TOKEN=${{ secrets.HF_TOKEN }}
