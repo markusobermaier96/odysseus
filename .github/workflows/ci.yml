@@ -3,6 +3,23 @@ name: CI
 on:
   push:
     branches: [main]
+  jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Deploy to Hostinger
+      uses: hostinger/deploy-on-vps@v2
+      env:
+        # Define the environment variables the VPS agent needs to capture
+        NODE_ENV: 'production'
+        DATABASE_URL: ${{ secrets.PROD_DB_URL }}
+        API_KEY: ${{ secrets.PROD_API_KEY }}
+      with:
+        api-key: ${{ secrets.HOSTINGER_API_KEY }}
+        virtual-machine: ${{ vars.HOSTINGER_VM_ID }}
   pull_request:
 
 # Least privilege: none of the jobs write to the repo.
