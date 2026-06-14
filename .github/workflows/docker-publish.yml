@@ -38,7 +38,6 @@ jobs:
         AUTH_ENABLED=true
         SECURE_COOKIES=true
         ALLOWED_ORIGINS=https://odysseus.srv1519717.hstgr.cloud
-        TRAEFIK_HOST=srv1519717.hstgr.cloud
         ODYSSEUS_ADMIN_USER=admin
         ODYSSEUS_ADMIN_PASSWORD=${ODYSSEUS_ADMIN_PASSWORD}
         DATABASE_URL=sqlite:///./data/app.db

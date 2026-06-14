@@ -1,14 +1,9 @@
 services:
   odysseus:
     build: .
-    networks:
-      - default
-      - traefik-proxy
     labels:
       - traefik.enable=true
-      - traefik.docker.network=traefik-proxy
-      # Hostinger pattern — project-name is 'odysseus' in your workflow:
-      - traefik.http.routers.odysseus.rule=Host(`odysseus.${TRAEFIK_HOST}`)
+      - traefik.http.routers.odysseus.rule=Host(`odysseus.srv1519717.hstgr.cloud`)
       - traefik.http.routers.odysseus.entrypoints=websecure
       - traefik.http.routers.odysseus.tls.certresolver=letsencrypt
       - traefik.http.services.odysseus.loadbalancer.server.port=7000
@@ -154,7 +149,3 @@ volumes:
   searxng-data:
   chromadb-data:
   ntfy-cache:
-
-networks:
-  traefik-proxy:
-    external: true
