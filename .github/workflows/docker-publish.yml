@@ -10,21 +10,66 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v5
 
+    - name: Verify deploy files exist
+      run: |
+        test -f docker-compose.yml
+        test -f Dockerfile
+        test -f config/searxng/settings.yml
+
+    # Do not use hostinger/deploy-on-vps@v2 here: that action always sends a
+    # GitHub blob permalink pinned to ${{ github.sha }}. If main is force-pushed
+    # or rewritten, Hostinger cannot fetch that commit and deploy fails before
+    # Docker runs (the /.hstgr-*.list.py noise is just cleanup after that).
+    # Instead, point Hostinger at the branch tip so it clones the repo fresh.
     - name: Deploy to Hostinger
-      uses: hostinger/deploy-on-vps@v2
-      with:
-        api-key: ${{ secrets.HOSTINGER_API_KEY }}
-        virtual-machine: ${{ vars.HOSTINGER_VM_ID }}
-        project-name: 'odysseus'
-        docker-compose-path: ./docker-compose.yml
-        environment-variables: |
-          APP_PORT=7000
-          PUID=1000
-          PGID=1000
-          NODE_ENV=production
-          AUTH_ENABLED=true
-          SECURE_COOKIES=true
-          ALLOWED_ORIGINS=https://odysseus.srv1519717.hstgr.cloud
-          ODYSSEUS_ADMIN_USER=admin
-          ODYSSEUS_ADMIN_PASSWORD=${{ secrets.ODYSSEUS_ADMIN_PASSWORD }}
-          DATABASE_URL=sqlite:///./data/app.db
+      env:
+        HOSTINGER_API_KEY: ${{ secrets.HOSTINGER_API_KEY }}
+        VM_ID: ${{ vars.HOSTINGER_VM_ID }}
+        ODYSSEUS_ADMIN_PASSWORD: ${{ secrets.ODYSSEUS_ADMIN_PASSWORD }}
+        REPO_CONTENT_URL: ${{ github.server_url }}/${{ github.repository }}/tree/${{ github.ref_name }}
+      run: |
+        set -euo pipefail
+
+        ENVIRONMENT=$(cat <<EOF
+        APP_PORT=7000
+        PUID=1000
+        PGID=1000
+        NODE_ENV=production
+        AUTH_ENABLED=true
+        SECURE_COOKIES=true
+        ALLOWED_ORIGINS=https://odysseus.srv1519717.hstgr.cloud
+        TRAEFIK_HOST=srv1519717.hstgr.cloud
+        ODYSSEUS_ADMIN_USER=admin
+        ODYSSEUS_ADMIN_PASSWORD=${ODYSSEUS_ADMIN_PASSWORD}
+        DATABASE_URL=sqlite:///./data/app.db
+        EOF
+        )
+
+        BODY=$(jq -n \
+          --arg content "$REPO_CONTENT_URL" \
+          --arg project_name "odysseus" \
+          --arg environment "$ENVIRONMENT" \
+          '{
+            project_name: $project_name,
+            content: $content,
+            environment: $environment
+          }')
+
+        echo "Deploying from branch URL: $REPO_CONTENT_URL"
+
+        RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+          -H "Authorization: Bearer ${HOSTINGER_API_KEY}" \
+          -H "Content-Type: application/json" \
+          -d "$BODY" \
+          "https://developers.hostinger.com/api/vps/v1/virtual-machines/${VM_ID}/docker")
+
+        HTTP_BODY=$(echo "$RESPONSE" | sed '$d')
+        HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+
+        if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+          echo "Deployment initiated successfully."
+        else
+          echo "Deployment failed with status code: $HTTP_STATUS"
+          echo "$HTTP_BODY"
+          exit 1
+        fi
